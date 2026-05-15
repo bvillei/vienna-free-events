@@ -8,7 +8,7 @@ import { EventFilters } from '../../models/event.model';
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
         <!-- Search -->
@@ -43,13 +43,13 @@ import { EventFilters } from '../../models/event.model';
 
         <!-- From date -->
         <div>
-          <label class="text-xs text-gray-500 mb-1 block">{{ tx.t('filter_from') }}</label>
+          <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{{ tx.t('filter_from') }}</label>
           <input class="input" type="date" [(ngModel)]="filters.from_date" (ngModelChange)="emit()" />
         </div>
 
         <!-- To date -->
         <div>
-          <label class="text-xs text-gray-500 mb-1 block">{{ tx.t('filter_to') }}</label>
+          <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{{ tx.t('filter_to') }}</label>
           <input class="input" type="date" [(ngModel)]="filters.to_date" (ngModelChange)="emit()" />
         </div>
 
@@ -73,20 +73,14 @@ export class FilterBarComponent implements OnInit {
   constructor(public tx: TranslationService) {}
 
   ngOnInit() {
-    // Default from_date to today
     this.filters.from_date = new Date().toISOString().split('T')[0];
     this.emit();
   }
 
-  emit() {
-    this.filtersChange.emit({ ...this.filters });
-  }
+  emit() { this.filtersChange.emit({ ...this.filters }); }
 
   reset() {
-    this.filters = {
-      free_type: 'all',
-      from_date: new Date().toISOString().split('T')[0],
-    };
+    this.filters = { free_type: 'all', from_date: new Date().toISOString().split('T')[0] };
     this.emit();
   }
 }

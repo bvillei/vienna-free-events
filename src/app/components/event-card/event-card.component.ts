@@ -4,13 +4,25 @@ import { TranslationService } from '../../services/translation.service';
 import { Event } from '../../models/event.model';
 
 const CATEGORY_STYLES: Record<string, string> = {
-  festival:   'bg-orange-100 text-orange-700',
-  music:      'bg-purple-100 text-purple-700',
-  film:       'bg-blue-100 text-blue-700',
-  dance:      'bg-pink-100 text-pink-700',
-  theater:    'bg-red-100 text-red-700',
-  sport:      'bg-green-100 text-green-700',
-  literature: 'bg-amber-100 text-amber-700',
+  festival:   'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  music:      'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  film:       'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  dance:      'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
+  theater:    'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  sport:      'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  literature: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  community:  'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+};
+
+const CATEGORY_BAR: Record<string, string> = {
+  festival:   'bg-orange-400',
+  music:      'bg-purple-400',
+  film:       'bg-blue-400',
+  dance:      'bg-pink-400',
+  theater:    'bg-red-400',
+  sport:      'bg-green-400',
+  literature: 'bg-amber-400',
+  community:  'bg-teal-400',
 };
 
 @Component({
@@ -29,35 +41,35 @@ const CATEGORY_STYLES: Record<string, string> = {
             {{ tx.category(event.category) }}
           </span>
           @if (event.free_type === 'free_with_registration') {
-            <span class="badge bg-yellow-100 text-yellow-700">
+            <span class="badge bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
               ⚠ {{ tx.t('badge_registration') }}
             </span>
           } @else {
-            <span class="badge bg-emerald-100 text-emerald-700">
+            <span class="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
               ✓ {{ tx.t('badge_free') }}
             </span>
           }
           @if (event.recurrence) {
-            <span class="badge bg-gray-100 text-gray-600">
+            <span class="badge bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">
               🔁 {{ event.recurrence === 'daily' ? tx.t('badge_daily') : tx.t('badge_weekly') }}
             </span>
           }
         </div>
 
         <!-- Title -->
-        <h3 class="font-semibold text-gray-900 text-base leading-snug line-clamp-2">
+        <h3 class="font-semibold text-gray-900 dark:text-white text-base leading-snug line-clamp-2">
           {{ tx.field(event, 'title') }}
         </h3>
 
         <!-- Description -->
         @if (tx.field(event, 'description')) {
-          <p class="text-sm text-gray-500 line-clamp-3 flex-1">
+          <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 flex-1">
             {{ tx.field(event, 'description') }}
           </p>
         }
 
         <!-- Date + location -->
-        <div class="text-xs text-gray-400 space-y-1 mt-auto pt-2 border-t border-gray-50">
+        <div class="text-xs text-gray-400 dark:text-gray-500 space-y-1 mt-auto pt-2 border-t border-gray-50 dark:border-gray-700">
           <div class="flex items-center gap-1.5">
             <span>📅</span>
             <span>{{ formatDate(event.start_date) }}
@@ -83,25 +95,10 @@ const CATEGORY_STYLES: Record<string, string> = {
 })
 export class EventCardComponent {
   @Input({ required: true }) event!: Event;
-
   constructor(public tx: TranslationService) {}
 
-  categoryStyle(cat: string): string {
-    return CATEGORY_STYLES[cat] ?? 'bg-gray-100 text-gray-700';
-  }
-
-  categoryBar(cat: string): string {
-    const map: Record<string, string> = {
-      festival:   'bg-orange-400',
-      music:      'bg-purple-400',
-      film:       'bg-blue-400',
-      dance:      'bg-pink-400',
-      theater:    'bg-red-400',
-      sport:      'bg-green-400',
-      literature: 'bg-amber-400',
-    };
-    return map[cat] ?? 'bg-gray-300';
-  }
+  categoryStyle(cat: string): string { return CATEGORY_STYLES[cat] ?? 'bg-gray-100 text-gray-700'; }
+  categoryBar(cat: string): string { return CATEGORY_BAR[cat] ?? 'bg-gray-300'; }
 
   formatDate(dateStr: string): string {
     const d = new Date(dateStr + 'T00:00:00');
