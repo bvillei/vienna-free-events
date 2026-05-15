@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Subscription, timer } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { TranslationService } from '../../services/translation.service';
@@ -9,11 +10,12 @@ import { EventTableComponent } from '../../components/event-table/event-table.co
 import { Event, EventFilters } from '../../models/event.model';
 
 type ViewMode = 'grid' | 'table';
+type SortMode = 'date' | 'category' | 'name';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [FilterBarComponent, EventCardComponent, EventTableComponent],
+  imports: [FilterBarComponent, EventCardComponent, EventTableComponent, FormsModule],
   template: `
     <div class="min-h-screen bg-gray-50 dark:bg-gray-950">
       <!-- Hero -->
@@ -61,6 +63,17 @@ type ViewMode = 'grid' | 'table';
                   {{ exporting ? '…' : '📄 ' + tx.t('export_pdf') }}
                 </button>
               }
+              <!-- Sort -->
+              <select
+                class="select !w-auto text-xs py-1.5"
+                [(ngModel)]="sort"
+                (ngModelChange)="applySort()"
+              >
+                <option value="date">{{ tx.t('sort_date') }}</option>
+                <option value="category">{{ tx.t('sort_category') }}</option>
+                <option value="name">{{ tx.t('sort_name') }}</option>
+              </select>
+
               <!-- Grid / Table toggle -->
               <div class="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               <button
@@ -132,6 +145,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   loading = true;
   showWakeUpBanner = false;
   view: ViewMode = 'grid';
+  sort: SortMode = 'date';
   exporting = false;
   private subs = new Subscription();
   private currentFilters: EventFilters = {};
@@ -165,10 +179,30 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.subs.add(
       this.eventSvc.getEvents(filters).subscribe({
-        next: events => { this.events = events; this.loading = false; this.showWakeUpBanner = false; },
+        next: events => {
+          this.events = events;
+          this.applySort();
+          this.loading = false;
+          this.showWakeUpBanner = false;
+        },
         error: () => { this.events = []; this.loading = false; },
       })
     );
+  }
+
+  applySort() {
+    const lang = this.tx.lang;
+    this.events = [...this.events].sort((a, b) => {
+      if (this.sort === 'category') {
+        return a.category.localeCompare(b.category) || a.start_date.localeCompare(b.start_date);
+      }
+      if (this.sort === 'name') {
+        const ta = (lang === 'de' ? a.title_de : null) ?? a.title_en;
+        const tb = (lang === 'de' ? b.title_de : null) ?? b.title_en;
+        return ta.localeCompare(tb, lang);
+      }
+      return a.start_date.localeCompare(b.start_date); // date (default)
+    });
   }
 
   async exportPdf() {

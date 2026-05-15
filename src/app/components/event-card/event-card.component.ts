@@ -31,8 +31,13 @@ const CATEGORY_BAR: Record<string, string> = {
   imports: [RouterLink],
   template: `
     <div class="card flex flex-col h-full">
-      <!-- Top color bar by category -->
-      <div class="h-1.5 w-full" [class]="categoryBar(event.category)"></div>
+      <!-- Image or color bar -->
+      @if (event.image_url) {
+        <img [src]="event.image_url" [alt]="tx.field(event, 'title')"
+             class="w-full h-40 object-cover" loading="lazy" />
+      } @else {
+        <div class="h-1.5 w-full" [class]="categoryBar(event.category)"></div>
+      }
 
       <div class="p-5 flex flex-col gap-3 flex-1">
         <!-- Category + free type badges -->

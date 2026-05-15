@@ -43,7 +43,13 @@ const CATEGORY_BAR: Record<string, string> = {
 
         @if (!loading && event) {
           <div class="card overflow-hidden">
-            <div class="h-2 w-full" [class]="categoryBar(event.category)"></div>
+            <!-- Image or color bar -->
+            @if (event.image_url) {
+              <img [src]="event.image_url" [alt]="tx.field(event, 'title')"
+                   class="w-full h-56 object-cover" loading="lazy" />
+            } @else {
+              <div class="h-2 w-full" [class]="categoryBar(event.category)"></div>
+            }
 
             <div class="p-6 space-y-5">
               <!-- Badges -->
@@ -127,12 +133,19 @@ const CATEGORY_BAR: Record<string, string> = {
                 }
               </div>
 
-              @if (event.external_url) {
-                <a [href]="event.external_url" target="_blank" rel="noopener"
-                   class="btn-primary inline-flex w-full justify-center">
-                  🔗 {{ tx.t('website') }}
+              <!-- Action buttons -->
+              <div class="flex flex-col sm:flex-row gap-2">
+                @if (event.external_url) {
+                  <a [href]="event.external_url" target="_blank" rel="noopener"
+                     class="btn-primary flex-1 justify-center">
+                    🔗 {{ tx.t('website') }}
+                  </a>
+                }
+                <a [href]="calendarUrl(event)" target="_blank" rel="noopener"
+                   class="btn-ghost flex-1 justify-center">
+                  📅 {{ tx.t('add_to_calendar') }}
                 </a>
-              }
+              </div>
             </div>
           </div>
         }
@@ -169,6 +182,24 @@ export class EventDetailComponent implements OnInit, OnDestroy {
 
   categoryStyle(cat: string): string { return CATEGORY_STYLES[cat] ?? 'bg-gray-100 text-gray-700'; }
   categoryBar(cat: string): string { return CATEGORY_BAR[cat] ?? 'bg-gray-300'; }
+
+  calendarUrl(event: Event): string {
+    const toGcal = (iso: string) => iso.slice(0, 10).replace(/-/g, '');
+    const start = toGcal(event.start_date);
+    // Google Calendar end date for all-day events is exclusive → add 1 day
+    const endDate = new Date((event.end_date ?? event.start_date).slice(0, 10) + 'T12:00:00');
+    endDate.setDate(endDate.getDate() + 1);
+    const end = endDate.toISOString().slice(0, 10).replace(/-/g, '');
+    const title = encodeURIComponent(this.tx.field(event, 'title'));
+    const location = encodeURIComponent(
+      [event.location_name, event.location_address].filter(Boolean).join(', ')
+    );
+    const details = encodeURIComponent(
+      (this.tx.field(event, 'description') ?? '') +
+      (event.external_url ? `\n\n${event.external_url}` : '')
+    );
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${location}&details=${details}`;
+  }
 
   formatDate(dateStr: string): string {
     if (!dateStr) return '';

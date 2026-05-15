@@ -18,9 +18,21 @@ const MONTHS = [
   template: `
     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 space-y-3">
 
-      <!-- Month quick-filters -->
+      <!-- Month + weekend quick-filters -->
       <div class="flex flex-wrap gap-2">
         <span class="text-xs text-gray-400 dark:text-gray-500 self-center mr-1">📅</span>
+
+        <!-- This weekend -->
+        <button
+          (click)="toggleWeekend()"
+          class="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
+          [class]="activeMonth === 'weekend'
+            ? 'bg-red-600 text-white border-red-600'
+            : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-red-400 hover:text-red-600 dark:hover:text-red-400'"
+        >
+          🗓 {{ tx.t('this_weekend') }}
+        </button>
+
         @for (m of months; track m.key) {
           <button
             (click)="toggleMonth(m)"
@@ -110,6 +122,21 @@ export class FilterBarComponent implements OnInit {
 
   ngOnInit() {
     this.filters.from_date = new Date().toISOString().split('T')[0];
+    this.emit();
+  }
+
+  toggleWeekend() {
+    if (this.activeMonth === 'weekend') {
+      this.clearMonth();
+      return;
+    }
+    const today = new Date();
+    const daysToSat = today.getDay() === 6 ? 0 : (6 - today.getDay() + 7) % 7 || 7;
+    const sat = new Date(today); sat.setDate(today.getDate() + daysToSat);
+    const sun = new Date(sat);   sun.setDate(sat.getDate() + 1);
+    this.activeMonth = 'weekend';
+    this.filters.from_date = sat.toISOString().slice(0, 10);
+    this.filters.to_date   = sun.toISOString().slice(0, 10);
     this.emit();
   }
 
