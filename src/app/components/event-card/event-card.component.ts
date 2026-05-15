@@ -101,7 +101,9 @@ export class EventCardComponent {
   categoryBar(cat: string): string { return CATEGORY_BAR[cat] ?? 'bg-gray-300'; }
 
   formatDate(dateStr: string): string {
-    const d = new Date(dateStr + 'T00:00:00');
+    if (!dateStr) return '';
+    const d = new Date(dateStr.slice(0, 10) + 'T12:00:00');
+    if (isNaN(d.getTime())) return dateStr;
     return d.toLocaleDateString(this.tx.lang === 'de' ? 'de-AT' : 'en-GB', {
       day: 'numeric', month: 'short', year: 'numeric'
     });

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription, timer } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { TranslationService } from '../../services/translation.service';
+import { PdfExportService } from '../../services/pdf-export.service';
 import { FilterBarComponent } from '../../components/filter-bar/filter-bar.component';
 import { EventCardComponent } from '../../components/event-card/event-card.component';
 import { EventTableComponent } from '../../components/event-table/event-table.component';
@@ -41,16 +42,27 @@ type ViewMode = 'grid' | 'table';
           (filtersChange)="onFiltersChange($event)"
         />
 
-        <!-- Count + view toggle -->
+        <!-- Count + view toggle + PDF export -->
         @if (!loading) {
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between flex-wrap gap-2">
             <p class="text-sm text-gray-400 dark:text-gray-500">
               @if (events.length > 0) {
                 {{ events.length }} {{ tx.t('events_found') }}
               }
             </p>
-            <!-- Grid / Table toggle -->
-            <div class="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- PDF export -->
+              @if (events.length > 0) {
+                <button
+                  (click)="exportPdf()"
+                  [disabled]="exporting"
+                  class="btn-ghost text-xs py-1.5 px-3"
+                >
+                  {{ exporting ? '…' : '📄 ' + tx.t('export_pdf') }}
+                </button>
+              }
+              <!-- Grid / Table toggle -->
+              <div class="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               <button
                 (click)="view = 'grid'"
                 class="px-3 py-1.5 text-sm flex items-center gap-1.5 transition-colors"
@@ -75,6 +87,7 @@ type ViewMode = 'grid' | 'table';
                 </svg>
                 {{ tx.t('view_table') }}
               </button>
+            </div>
             </div>
           </div>
         }
@@ -119,10 +132,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   loading = true;
   showWakeUpBanner = false;
   view: ViewMode = 'grid';
+  exporting = false;
   private subs = new Subscription();
   private currentFilters: EventFilters = {};
 
-  constructor(public tx: TranslationService, private eventSvc: EventService) {}
+  constructor(
+    public tx: TranslationService,
+    private eventSvc: EventService,
+    private pdfSvc: PdfExportService,
+  ) {}
 
   ngOnInit() {
     this.loadCategories();
@@ -151,6 +169,15 @@ export class HomeComponent implements OnInit, OnDestroy {
         error: () => { this.events = []; this.loading = false; },
       })
     );
+  }
+
+  async exportPdf() {
+    this.exporting = true;
+    try {
+      await this.pdfSvc.export(this.events, this.tx.lang);
+    } finally {
+      this.exporting = false;
+    }
   }
 
   ngOnDestroy() { this.subs.unsubscribe(); }
