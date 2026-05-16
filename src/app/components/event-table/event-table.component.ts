@@ -72,15 +72,15 @@ type SortCol = 'name' | 'category' | 'date' | 'location';
                 </span>
               </td>
               <!-- Dates -->
-              <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                {{ formatDate(event.start_date) }}
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
+                <div class="whitespace-nowrap">{{ formatDate(event.start_date) }}</div>
                 @if (event.end_date && event.end_date !== event.start_date) {
-                  <br><span class="text-gray-400 dark:text-gray-500">→ {{ formatDate(event.end_date) }}</span>
+                  <div class="text-gray-400 dark:text-gray-500 whitespace-nowrap">→ {{ formatDate(event.end_date) }}</div>
                 }
                 @if (event.recurrence) {
-                  <br><span class="text-xs text-gray-400 dark:text-gray-600">
+                  <div class="text-xs text-gray-400 dark:text-gray-600 hidden sm:block">
                     🔁 {{ event.recurrence === 'daily' ? tx.t('badge_daily') : tx.t('badge_weekly') }}
-                  </span>
+                  </div>
                 }
               </td>
               <!-- Location -->
@@ -100,10 +100,11 @@ type SortCol = 'name' | 'category' | 'date' | 'location';
                 }
               </td>
               <!-- Link -->
-              <td class="px-4 py-3 text-right">
+              <td class="px-2 py-3 text-right">
                 <a [routerLink]="['/events', event.id]"
-                   class="btn-primary py-1 px-3 text-xs whitespace-nowrap">
-                  {{ tx.t('more_info') }}
+                   class="btn-primary py-1 px-2 text-xs whitespace-nowrap">
+                  <span class="hidden sm:inline">{{ tx.t('more_info') }}</span>
+                  <span class="sm:hidden">→</span>
                 </a>
               </td>
             </tr>

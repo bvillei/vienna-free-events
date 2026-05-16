@@ -79,14 +79,14 @@ function weekStart(d: Date): Date {
           [class]="filters.is_outdoor
             ? 'bg-green-600 text-white border-green-600'
             : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-green-400 hover:text-green-700 dark:hover:text-green-400'"
-        >🌳 {{ tx.t('filter_outdoor') }}</button>
+        >{{ tx.t('filter_outdoor') }}</button>
         <button
           (click)="toggleFlag('family')"
           class="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
           [class]="filters.is_family_friendly
             ? 'bg-blue-600 text-white border-blue-600'
             : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-blue-400 hover:text-blue-700 dark:hover:text-blue-400'"
-        >👨‍👩‍👧 {{ tx.t('filter_family') }}</button>
+        >{{ tx.t('filter_family') }}</button>
       </div>
 
       <!-- Row 4: search, category, free type, dates, reset -->
@@ -124,15 +124,15 @@ function weekStart(d: Date): Date {
         </div>
 
         <!-- From date -->
-        <div>
+        <div class="min-w-0">
           <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{{ tx.t('filter_from') }}</label>
-          <input class="input" type="date" [(ngModel)]="filters.from_date" (ngModelChange)="onDateChange()" />
+          <input class="input w-full max-w-full" type="date" [(ngModel)]="filters.from_date" (ngModelChange)="onDateChange()" />
         </div>
 
         <!-- To date -->
-        <div>
+        <div class="min-w-0">
           <label class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">{{ tx.t('filter_to') }}</label>
-          <input class="input" type="date" [(ngModel)]="filters.to_date" (ngModelChange)="onDateChange()" />
+          <input class="input w-full max-w-full" type="date" [(ngModel)]="filters.to_date" (ngModelChange)="onDateChange()" />
         </div>
 
         <!-- Reset -->
