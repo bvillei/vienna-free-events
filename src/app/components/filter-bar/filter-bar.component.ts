@@ -70,8 +70,27 @@ function weekStart(d: Date): Date {
         }
       </div>
 
-      <!-- Row 3: search, category, free type, dates, reset -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      <!-- Row 3: outdoor / family toggle chips -->
+      <div class="flex flex-wrap gap-2">
+        <span class="text-xs text-gray-400 dark:text-gray-500 self-center">🌿</span>
+        <button
+          (click)="toggleFlag('outdoor')"
+          class="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
+          [class]="filters.is_outdoor
+            ? 'bg-green-600 text-white border-green-600'
+            : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-green-400 hover:text-green-700 dark:hover:text-green-400'"
+        >🌳 {{ tx.t('filter_outdoor') }}</button>
+        <button
+          (click)="toggleFlag('family')"
+          class="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
+          [class]="filters.is_family_friendly
+            ? 'bg-blue-600 text-white border-blue-600'
+            : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-blue-400 hover:text-blue-700 dark:hover:text-blue-400'"
+        >👨‍👩‍👧 {{ tx.t('filter_family') }}</button>
+      </div>
+
+      <!-- Row 4: search, category, free type, dates, reset -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
         <!-- Search -->
         <div class="lg:col-span-2">
@@ -116,26 +135,8 @@ function weekStart(d: Date): Date {
           <input class="input" type="date" [(ngModel)]="filters.to_date" (ngModelChange)="onDateChange()" />
         </div>
 
-        <!-- Outdoor / Family toggles -->
-        <div class="flex gap-2">
-          <button
-            (click)="toggleFlag('outdoor')"
-            class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors flex-1 text-center"
-            [class]="filters.is_outdoor
-              ? 'bg-green-600 text-white border-green-600'
-              : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-green-400'"
-          >{{ tx.t('filter_outdoor') }}</button>
-          <button
-            (click)="toggleFlag('family')"
-            class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors flex-1 text-center"
-            [class]="filters.is_family_friendly
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-blue-400'"
-          >{{ tx.t('filter_family') }}</button>
-        </div>
-
         <!-- Reset -->
-        <div class="flex items-end">
+        <div class="lg:col-span-2 flex items-end">
           <button class="btn-ghost w-full justify-center" (click)="reset()">
             {{ tx.t('filter_reset') }}
           </button>

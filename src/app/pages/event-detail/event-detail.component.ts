@@ -235,11 +235,10 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   }
 
   mapsUrl(event: Event): string {
-    if (event.latitude && event.longitude) {
-      return `https://www.google.com/maps?q=${event.latitude},${event.longitude}`;
-    }
-    const q = encodeURIComponent(`${event.location_name}, Vienna`);
-    return `https://www.google.com/maps/search/?api=1&query=${q}`;
+    const query = event.location_address
+      ? event.location_address
+      : `${event.location_name}, Vienna`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   }
 
   calendarUrl(event: Event): string {
