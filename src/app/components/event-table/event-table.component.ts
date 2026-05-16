@@ -15,7 +15,7 @@ const CATEGORY_STYLES: Record<string, string> = {
   community:  'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
 };
 
-type SortCol = 'name' | 'category' | 'date';
+type SortCol = 'name' | 'category' | 'date' | 'location';
 
 @Component({
   selector: 'app-event-table',
@@ -26,31 +26,26 @@ type SortCol = 'name' | 'category' | 'date';
       <table class="w-full text-sm text-left">
         <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
           <tr>
-            <!-- Name header -->
             <th class="px-4 py-3">
-              <button (click)="setSort('name')"
-                class="flex items-center gap-1 font-semibold text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                {{ tx.t('th_title') }}
-                <span class="text-xs opacity-60">{{ sortIndicator('name') }}</span>
+              <button (click)="setSort('name')" class="sort-btn">
+                {{ tx.t('th_title') }}<span class="sort-arrow">{{ ind('name') }}</span>
               </button>
             </th>
-            <!-- Category header -->
             <th class="px-4 py-3 hidden sm:table-cell">
-              <button (click)="setSort('category')"
-                class="flex items-center gap-1 font-semibold text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                {{ tx.t('th_category') }}
-                <span class="text-xs opacity-60">{{ sortIndicator('category') }}</span>
+              <button (click)="setSort('category')" class="sort-btn">
+                {{ tx.t('th_category') }}<span class="sort-arrow">{{ ind('category') }}</span>
               </button>
             </th>
-            <!-- Date header -->
             <th class="px-4 py-3">
-              <button (click)="setSort('date')"
-                class="flex items-center gap-1 font-semibold text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                {{ tx.t('th_date') }}
-                <span class="text-xs opacity-60">{{ sortIndicator('date') }}</span>
+              <button (click)="setSort('date')" class="sort-btn">
+                {{ tx.t('th_date') }}<span class="sort-arrow">{{ ind('date') }}</span>
               </button>
             </th>
-            <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 hidden md:table-cell">{{ tx.t('th_location') }}</th>
+            <th class="px-4 py-3 hidden md:table-cell">
+              <button (click)="setSort('location')" class="sort-btn">
+                {{ tx.t('th_location') }}<span class="sort-arrow">{{ ind('location') }}</span>
+              </button>
+            </th>
             <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 hidden lg:table-cell">{{ tx.t('th_type') }}</th>
             <th class="px-4 py-3"></th>
           </tr>
@@ -117,6 +112,17 @@ type SortCol = 'name' | 'category' | 'date';
       </table>
     </div>
   `,
+  styles: [`
+    .sort-btn {
+      display: flex; align-items: center; gap: 3px;
+      font-weight: 600;
+      color: rgb(75 85 99); /* gray-600 */
+    }
+    :host-context(.dark) .sort-btn { color: rgb(209 213 219); }
+    .sort-btn:hover { color: rgb(220 38 38); }
+    :host-context(.dark) .sort-btn:hover { color: rgb(248 113 113); }
+    .sort-arrow { font-size: 0.7rem; opacity: 0.65; }
+  `],
 })
 export class EventTableComponent implements OnChanges {
   @Input({ required: true }) events!: Event[];
@@ -139,7 +145,7 @@ export class EventTableComponent implements OnChanges {
     this.applySort();
   }
 
-  sortIndicator(col: SortCol): string {
+  ind(col: SortCol): string {
     if (this.sortCol !== col) return '↕';
     return this.sortDir === 'asc' ? '↑' : '↓';
   }
@@ -148,14 +154,21 @@ export class EventTableComponent implements OnChanges {
     const lang = this.tx.lang;
     this.sorted = [...(this.events ?? [])].sort((a, b) => {
       let cmp = 0;
-      if (this.sortCol === 'category') {
-        cmp = a.category.localeCompare(b.category) || a.start_date.localeCompare(b.start_date);
-      } else if (this.sortCol === 'name') {
-        const ta = (lang === 'de' ? a.title_de : null) ?? a.title_en;
-        const tb = (lang === 'de' ? b.title_de : null) ?? b.title_en;
-        cmp = ta.localeCompare(tb, lang);
-      } else {
-        cmp = a.start_date.localeCompare(b.start_date);
+      switch (this.sortCol) {
+        case 'category':
+          cmp = a.category.localeCompare(b.category) || a.start_date.localeCompare(b.start_date);
+          break;
+        case 'name': {
+          const ta = (lang === 'de' ? a.title_de : null) ?? a.title_en;
+          const tb = (lang === 'de' ? b.title_de : null) ?? b.title_en;
+          cmp = ta.localeCompare(tb, lang);
+          break;
+        }
+        case 'location':
+          cmp = (a.location_name ?? '').localeCompare(b.location_name ?? '');
+          break;
+        default:
+          cmp = a.start_date.localeCompare(b.start_date);
       }
       return this.sortDir === 'asc' ? cmp : -cmp;
     });

@@ -153,6 +153,10 @@ const CATEGORY_BAR: Record<string, string> = {
                    class="btn-ghost flex-1 justify-center">
                   📅 {{ tx.t('add_to_calendar') }}
                 </a>
+                <a [href]="mapsUrl(event)" target="_blank" rel="noopener"
+                   class="btn-ghost flex-1 justify-center">
+                  🗺 {{ tx.t('maps_link') }}
+                </a>
               </div>
             </div>
           </div>
@@ -211,6 +215,14 @@ export class EventDetailComponent implements OnInit, OnDestroy {
       (event.external_url ? `\n\n${event.external_url}` : '')
     );
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${location}&details=${details}`;
+  }
+
+  mapsUrl(event: Event): string {
+    if (event.latitude && event.longitude) {
+      return `https://www.google.com/maps?q=${event.latitude},${event.longitude}`;
+    }
+    const q = encodeURIComponent(`${event.location_name}, Vienna`);
+    return `https://www.google.com/maps/search/?api=1&query=${q}`;
   }
 
   formatDate(dateStr: string): string {

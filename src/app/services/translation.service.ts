@@ -49,6 +49,10 @@ const T: Record<Lang, Record<string, string>> = {
     view_table: 'Table',
     export_pdf: 'Export PDF',
     export_pdf_all: 'all events',
+    filter_today: 'Today',
+    filter_tomorrow: 'Tomorrow',
+    filter_this_week: 'This week',
+    filter_next_week: 'Next week',
     this_weekend: 'This weekend',
     sort_by: 'Sort by',
     sort_date: 'Date',
@@ -66,6 +70,7 @@ const T: Record<Lang, Record<string, string>> = {
     view_map: 'Map',
     save_event: 'Save event',
     unsave_event: 'Remove from saved',
+    maps_link: 'Show on Google Maps',
   },
   de: {
     site_title: 'Wien Gratis Events',
@@ -113,6 +118,10 @@ const T: Record<Lang, Record<string, string>> = {
     view_map: 'Karte',
     export_pdf: 'PDF exportieren',
     export_pdf_all: 'alle Events',
+    filter_today: 'Heute',
+    filter_tomorrow: 'Morgen',
+    filter_this_week: 'Diese Woche',
+    filter_next_week: 'Nächste Woche',
     this_weekend: 'Dieses Wochenende',
     sort_by: 'Sortieren',
     sort_date: 'Datum',
@@ -129,6 +138,7 @@ const T: Record<Lang, Record<string, string>> = {
     no_saved: 'Noch keine gespeicherten Events. Tippe auf ♡ bei einem Event.',
     save_event: 'Speichern',
     unsave_event: 'Entfernen',
+    maps_link: 'Auf Google Maps anzeigen',
   },
 };
 
