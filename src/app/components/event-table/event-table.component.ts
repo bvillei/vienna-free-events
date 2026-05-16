@@ -1,6 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslationService } from '../../services/translation.service';
+import { FavouritesService } from '../../services/favourites.service';
 import { Event } from '../../models/event.model';
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -14,6 +15,8 @@ const CATEGORY_STYLES: Record<string, string> = {
   community:  'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
 };
 
+type SortCol = 'name' | 'category' | 'date';
+
 @Component({
   selector: 'app-event-table',
   standalone: true,
@@ -23,20 +26,49 @@ const CATEGORY_STYLES: Record<string, string> = {
       <table class="w-full text-sm text-left">
         <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
           <tr>
-            <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">{{ tx.t('th_title') }}</th>
-            <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 hidden sm:table-cell">{{ tx.t('th_category') }}</th>
-            <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300">{{ tx.t('th_date') }}</th>
+            <!-- Name header -->
+            <th class="px-4 py-3">
+              <button (click)="setSort('name')"
+                class="flex items-center gap-1 font-semibold text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                {{ tx.t('th_title') }}
+                <span class="text-xs opacity-60">{{ sortIndicator('name') }}</span>
+              </button>
+            </th>
+            <!-- Category header -->
+            <th class="px-4 py-3 hidden sm:table-cell">
+              <button (click)="setSort('category')"
+                class="flex items-center gap-1 font-semibold text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                {{ tx.t('th_category') }}
+                <span class="text-xs opacity-60">{{ sortIndicator('category') }}</span>
+              </button>
+            </th>
+            <!-- Date header -->
+            <th class="px-4 py-3">
+              <button (click)="setSort('date')"
+                class="flex items-center gap-1 font-semibold text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                {{ tx.t('th_date') }}
+                <span class="text-xs opacity-60">{{ sortIndicator('date') }}</span>
+              </button>
+            </th>
             <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 hidden md:table-cell">{{ tx.t('th_location') }}</th>
             <th class="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300 hidden lg:table-cell">{{ tx.t('th_type') }}</th>
             <th class="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
-          @for (event of events; track event.id) {
+          @for (event of sorted; track event.id) {
             <tr class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               <!-- Title -->
               <td class="px-4 py-3 font-medium text-gray-900 dark:text-white max-w-xs">
-                <div class="line-clamp-2">{{ tx.field(event, 'title') }}</div>
+                <div class="flex items-start gap-2">
+                  <button
+                    (click)="fav.toggle(event.id)"
+                    [title]="fav.has(event.id) ? tx.t('unsave_event') : tx.t('save_event')"
+                    class="mt-0.5 shrink-0 text-base leading-none transition-colors"
+                    [class]="fav.has(event.id) ? 'text-red-500' : 'text-gray-300 dark:text-gray-600 hover:text-red-400'"
+                  >{{ fav.has(event.id) ? '♥' : '♡' }}</button>
+                  <div class="line-clamp-2">{{ tx.field(event, 'title') }}</div>
+                </div>
               </td>
               <!-- Category -->
               <td class="px-4 py-3 hidden sm:table-cell">
@@ -86,9 +118,48 @@ const CATEGORY_STYLES: Record<string, string> = {
     </div>
   `,
 })
-export class EventTableComponent {
+export class EventTableComponent implements OnChanges {
   @Input({ required: true }) events!: Event[];
-  constructor(public tx: TranslationService) {}
+
+  sorted: Event[] = [];
+  sortCol: SortCol = 'date';
+  sortDir: 'asc' | 'desc' = 'asc';
+
+  constructor(public tx: TranslationService, public fav: FavouritesService) {}
+
+  ngOnChanges() { this.applySort(); }
+
+  setSort(col: SortCol) {
+    if (this.sortCol === col) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortCol = col;
+      this.sortDir = 'asc';
+    }
+    this.applySort();
+  }
+
+  sortIndicator(col: SortCol): string {
+    if (this.sortCol !== col) return '↕';
+    return this.sortDir === 'asc' ? '↑' : '↓';
+  }
+
+  applySort() {
+    const lang = this.tx.lang;
+    this.sorted = [...(this.events ?? [])].sort((a, b) => {
+      let cmp = 0;
+      if (this.sortCol === 'category') {
+        cmp = a.category.localeCompare(b.category) || a.start_date.localeCompare(b.start_date);
+      } else if (this.sortCol === 'name') {
+        const ta = (lang === 'de' ? a.title_de : null) ?? a.title_en;
+        const tb = (lang === 'de' ? b.title_de : null) ?? b.title_en;
+        cmp = ta.localeCompare(tb, lang);
+      } else {
+        cmp = a.start_date.localeCompare(b.start_date);
+      }
+      return this.sortDir === 'asc' ? cmp : -cmp;
+    });
+  }
 
   categoryStyle(cat: string): string { return CATEGORY_STYLES[cat] ?? 'bg-gray-100 text-gray-700'; }
 

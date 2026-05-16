@@ -60,6 +60,12 @@ const T: Record<Lang, Record<string, string>> = {
     th_date: 'Date',
     th_location: 'Location',
     th_type: 'Entry',
+    tab_all: 'All Events',
+    tab_saved: 'Saved',
+    no_saved: 'No saved events yet. Tap ♡ on any event to save it.',
+    view_map: 'Map',
+    save_event: 'Save event',
+    unsave_event: 'Remove from saved',
   },
   de: {
     site_title: 'Wien Gratis Events',
@@ -104,6 +110,7 @@ const T: Record<Lang, Record<string, string>> = {
     footer: '© 2026 Wien Gratis Events — manuell gepflegt, Änderungen vorbehalten.',
     view_grid: 'Kacheln',
     view_table: 'Tabelle',
+    view_map: 'Karte',
     export_pdf: 'PDF exportieren',
     export_pdf_all: 'alle Events',
     this_weekend: 'Dieses Wochenende',
@@ -117,6 +124,11 @@ const T: Record<Lang, Record<string, string>> = {
     th_date: 'Datum',
     th_location: 'Ort',
     th_type: 'Eintritt',
+    tab_all: 'Alle Events',
+    tab_saved: 'Gespeichert',
+    no_saved: 'Noch keine gespeicherten Events. Tippe auf ♡ bei einem Event.',
+    save_event: 'Speichern',
+    unsave_event: 'Entfernen',
   },
 };
 

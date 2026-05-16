@@ -19,6 +19,8 @@ export interface Event {
   registration_note_de?: string;
   external_url?: string;
   image_url?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface EventFilters {

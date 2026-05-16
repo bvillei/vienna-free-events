@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslationService } from '../../services/translation.service';
+import { FavouritesService } from '../../services/favourites.service';
 import { Event } from '../../models/event.model';
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -40,8 +41,8 @@ const CATEGORY_BAR: Record<string, string> = {
       }
 
       <div class="p-5 flex flex-col gap-3 flex-1">
-        <!-- Category + free type badges -->
-        <div class="flex flex-wrap gap-1.5">
+        <!-- Category + free type badges + heart -->
+        <div class="flex flex-wrap gap-1.5 items-start">
           <span class="badge" [class]="categoryStyle(event.category)">
             {{ tx.category(event.category) }}
           </span>
@@ -59,6 +60,13 @@ const CATEGORY_BAR: Record<string, string> = {
               🔁 {{ event.recurrence === 'daily' ? tx.t('badge_daily') : tx.t('badge_weekly') }}
             </span>
           }
+          <!-- Heart button -->
+          <button
+            (click)="toggleFav($event)"
+            [title]="fav.has(event.id) ? tx.t('unsave_event') : tx.t('save_event')"
+            class="ml-auto text-lg leading-none transition-colors"
+            [class]="fav.has(event.id) ? 'text-red-500' : 'text-gray-300 dark:text-gray-600 hover:text-red-400'"
+          >{{ fav.has(event.id) ? '♥' : '♡' }}</button>
         </div>
 
         <!-- Title -->
@@ -100,7 +108,13 @@ const CATEGORY_BAR: Record<string, string> = {
 })
 export class EventCardComponent {
   @Input({ required: true }) event!: Event;
-  constructor(public tx: TranslationService) {}
+  constructor(public tx: TranslationService, public fav: FavouritesService) {}
+
+  toggleFav(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.fav.toggle(this.event.id);
+  }
 
   categoryStyle(cat: string): string { return CATEGORY_STYLES[cat] ?? 'bg-gray-100 text-gray-700'; }
   categoryBar(cat: string): string { return CATEGORY_BAR[cat] ?? 'bg-gray-300'; }

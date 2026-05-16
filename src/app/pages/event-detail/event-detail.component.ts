@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { TranslationService } from '../../services/translation.service';
+import { FavouritesService } from '../../services/favourites.service';
 import { Event } from '../../models/event.model';
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -52,8 +53,8 @@ const CATEGORY_BAR: Record<string, string> = {
             }
 
             <div class="p-6 space-y-5">
-              <!-- Badges -->
-              <div class="flex flex-wrap gap-2">
+              <!-- Badges + heart -->
+              <div class="flex flex-wrap gap-2 items-center">
                 <span class="badge" [class]="categoryStyle(event.category)">
                   {{ tx.category(event.category) }}
                 </span>
@@ -71,6 +72,13 @@ const CATEGORY_BAR: Record<string, string> = {
                     🔁 {{ event.recurrence === 'daily' ? tx.t('badge_daily') : tx.t('badge_weekly') }}
                   </span>
                 }
+                <!-- Heart button -->
+                <button
+                  (click)="fav.toggle(event.id)"
+                  [title]="fav.has(event.id) ? tx.t('unsave_event') : tx.t('save_event')"
+                  class="ml-auto text-2xl leading-none transition-colors"
+                  [class]="fav.has(event.id) ? 'text-red-500' : 'text-gray-300 dark:text-gray-600 hover:text-red-400'"
+                >{{ fav.has(event.id) ? '♥' : '♡' }}</button>
               </div>
 
               <!-- Title -->
@@ -166,7 +174,12 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   loading = true;
   private subs = new Subscription();
 
-  constructor(private route: ActivatedRoute, private eventSvc: EventService, public tx: TranslationService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private eventSvc: EventService,
+    public tx: TranslationService,
+    public fav: FavouritesService,
+  ) {}
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -186,7 +199,6 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   calendarUrl(event: Event): string {
     const toGcal = (iso: string) => iso.slice(0, 10).replace(/-/g, '');
     const start = toGcal(event.start_date);
-    // Google Calendar end date for all-day events is exclusive → add 1 day
     const endDate = new Date((event.end_date ?? event.start_date).slice(0, 10) + 'T12:00:00');
     endDate.setDate(endDate.getDate() + 1);
     const end = endDate.toISOString().slice(0, 10).replace(/-/g, '');
