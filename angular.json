@@ -16,17 +16,20 @@
             "outputPath": "dist/vienna-free-events",
             "index": "src/index.html",
             "browser": "src/main.ts",
+            "serviceWorker": "ngsw-config.json",
             "polyfills": [
               "zone.js"
             ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
+              "src/favicon.svg",
               "src/assets",
+              "src/icons",
+              "src/manifest.webmanifest",
               { "glob": "_redirects", "input": "src", "output": "/" }
             ],
             "styles": [
-              "node_modules/leaflet/dist/leaflet.css",
               "src/styles.css"
             ],
             "scripts": [],
@@ -48,8 +51,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "4kb",
+                  "maximumError": "8kb"
                 }
               ],
               "outputHashing": "all"
@@ -57,7 +60,8 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "serviceWorker": false
             }
           },
           "defaultConfiguration": "production"

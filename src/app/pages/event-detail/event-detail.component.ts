@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { EventService } from '../../services/event.service';
 import { TranslationService } from '../../services/translation.service';
 import { FavouritesService } from '../../services/favourites.service';
+import { SeoService } from '../../services/seo.service';
 import { Event } from '../../models/event.model';
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -72,7 +73,17 @@ const CATEGORY_BAR: Record<string, string> = {
                     🔁 {{ event.recurrence === 'daily' ? tx.t('badge_daily') : tx.t('badge_weekly') }}
                   </span>
                 }
-                <!-- Heart button -->
+                @if (event.is_outdoor) {
+                  <span class="badge bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                    🌳 {{ tx.t('badge_outdoor') }}
+                  </span>
+                }
+                @if (event.is_family_friendly) {
+                  <span class="badge bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                    👨‍👩‍👧 {{ tx.t('badge_family') }}
+                  </span>
+                }
+                <!-- Heart -->
                 <button
                   (click)="fav.toggle(event.id)"
                   [title]="fav.has(event.id) ? tx.t('unsave_event') : tx.t('save_event')"
@@ -95,7 +106,6 @@ const CATEGORY_BAR: Record<string, string> = {
 
               <!-- Details -->
               <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 space-y-3 text-sm">
-
                 <div class="flex gap-3">
                   <span class="text-gray-400 dark:text-gray-500 w-24 shrink-0 font-medium">📅 {{ tx.t('date') }}</span>
                   <span class="text-gray-700 dark:text-gray-200">
@@ -105,21 +115,18 @@ const CATEGORY_BAR: Record<string, string> = {
                     }
                   </span>
                 </div>
-
                 @if (event.start_time) {
                   <div class="flex gap-3">
                     <span class="text-gray-400 dark:text-gray-500 w-24 shrink-0 font-medium">🕐 {{ tx.t('time') }}</span>
                     <span class="text-gray-700 dark:text-gray-200">{{ event.start_time.slice(0,5) }}</span>
                   </div>
                 }
-
                 @if (event.recurrence_note) {
                   <div class="flex gap-3">
                     <span class="text-gray-400 dark:text-gray-500 w-24 shrink-0 font-medium">🔁 {{ tx.t('recurrence') }}</span>
                     <span class="text-gray-700 dark:text-gray-200">{{ event.recurrence_note }}</span>
                   </div>
                 }
-
                 <div class="flex gap-3">
                   <span class="text-gray-400 dark:text-gray-500 w-24 shrink-0 font-medium">📍 {{ tx.t('location') }}</span>
                   <div class="text-gray-700 dark:text-gray-200">
@@ -132,7 +139,6 @@ const CATEGORY_BAR: Record<string, string> = {
                     }
                   </div>
                 </div>
-
                 @if (tx.field(event, 'registration_note')) {
                   <div class="flex gap-3">
                     <span class="text-gray-400 dark:text-gray-500 w-24 shrink-0 font-medium">💡 {{ tx.t('note') }}</span>
@@ -142,7 +148,7 @@ const CATEGORY_BAR: Record<string, string> = {
               </div>
 
               <!-- Action buttons -->
-              <div class="flex flex-col sm:flex-row gap-2">
+              <div class="flex flex-col sm:flex-row gap-2 flex-wrap">
                 @if (event.external_url) {
                   <a [href]="event.external_url" target="_blank" rel="noopener"
                      class="btn-primary flex-1 justify-center">
@@ -153,10 +159,21 @@ const CATEGORY_BAR: Record<string, string> = {
                    class="btn-ghost flex-1 justify-center">
                   📅 {{ tx.t('add_to_calendar') }}
                 </a>
-                <a [href]="mapsUrl(event)" target="_blank" rel="noopener"
+                <button (click)="downloadIcal(event)"
                    class="btn-ghost flex-1 justify-center">
-                  🗺 {{ tx.t('maps_link') }}
-                </a>
+                  📥 {{ tx.t('ical_export') }}
+                </button>
+                @if (showMapsButton(event)) {
+                  <a [href]="mapsUrl(event)" target="_blank" rel="noopener"
+                     class="btn-ghost flex-1 justify-center">
+                    🗺 {{ tx.t('maps_link') }}
+                  </a>
+                }
+                <button (click)="copyLink()"
+                   class="btn-ghost flex-1 justify-center transition-all"
+                   [class]="copied ? 'text-green-600 dark:text-green-400' : ''">
+                  {{ copied ? '✓ ' + tx.t('copied') : '🔗 ' + tx.t('copy_link') }}
+                </button>
               </div>
             </div>
           </div>
@@ -176,6 +193,7 @@ const CATEGORY_BAR: Record<string, string> = {
 export class EventDetailComponent implements OnInit, OnDestroy {
   event: Event | null = null;
   loading = true;
+  copied = false;
   private subs = new Subscription();
 
   constructor(
@@ -183,13 +201,21 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     private eventSvc: EventService,
     public tx: TranslationService,
     public fav: FavouritesService,
+    private seo: SeoService,
   ) {}
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.subs.add(
       this.eventSvc.getEvent(id).subscribe({
-        next: e => { this.event = e; this.loading = false; },
+        next: e => {
+          this.event = e;
+          this.loading = false;
+          const title = this.tx.field(e, 'title');
+          const desc  = this.tx.field(e, 'description') ||
+            `${e.location_name} — ${e.start_date.slice(0,10)}`;
+          this.seo.setPage(title, desc, e.image_url);
+        },
         error: () => { this.event = null; this.loading = false; },
       })
     );
@@ -200,21 +226,12 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   categoryStyle(cat: string): string { return CATEGORY_STYLES[cat] ?? 'bg-gray-100 text-gray-700'; }
   categoryBar(cat: string): string { return CATEGORY_BAR[cat] ?? 'bg-gray-300'; }
 
-  calendarUrl(event: Event): string {
-    const toGcal = (iso: string) => iso.slice(0, 10).replace(/-/g, '');
-    const start = toGcal(event.start_date);
-    const endDate = new Date((event.end_date ?? event.start_date).slice(0, 10) + 'T12:00:00');
-    endDate.setDate(endDate.getDate() + 1);
-    const end = endDate.toISOString().slice(0, 10).replace(/-/g, '');
-    const title = encodeURIComponent(this.tx.field(event, 'title'));
-    const location = encodeURIComponent(
-      [event.location_name, event.location_address].filter(Boolean).join(', ')
-    );
-    const details = encodeURIComponent(
-      (this.tx.field(event, 'description') ?? '') +
-      (event.external_url ? `\n\n${event.external_url}` : '')
-    );
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${location}&details=${details}`;
+  /** Hide Maps button when location is "Various …" or similar non-specific */
+  showMapsButton(event: Event): boolean {
+    const n = (event.location_name ?? '').toLowerCase();
+    return !n.startsWith('various') && !n.includes('citywide') &&
+           !n.includes('locations tbc') && !n.includes('parks across') &&
+           !n.includes('parks and open') && !n.includes('historic buildings');
   }
 
   mapsUrl(event: Event): string {
@@ -223,6 +240,66 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     }
     const q = encodeURIComponent(`${event.location_name}, Vienna`);
     return `https://www.google.com/maps/search/?api=1&query=${q}`;
+  }
+
+  calendarUrl(event: Event): string {
+    const toGcal = (iso: string) => iso.slice(0, 10).replace(/-/g, '');
+    const start = toGcal(event.start_date);
+    const endDate = new Date((event.end_date ?? event.start_date).slice(0, 10) + 'T12:00:00');
+    endDate.setDate(endDate.getDate() + 1);
+    const end = endDate.toISOString().slice(0, 10).replace(/-/g, '');
+    const title    = encodeURIComponent(this.tx.field(event, 'title'));
+    const location = encodeURIComponent([event.location_name, event.location_address].filter(Boolean).join(', '));
+    const details  = encodeURIComponent(
+      (this.tx.field(event, 'description') ?? '') +
+      (event.external_url ? `\n\n${event.external_url}` : '')
+    );
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${location}&details=${details}`;
+  }
+
+  downloadIcal(event: Event) {
+    const fmt  = (iso: string) => iso.slice(0, 10).replace(/-/g, '');
+    const start = fmt(event.start_date);
+    const endDate = new Date((event.end_date ?? event.start_date).slice(0, 10) + 'T12:00:00');
+    endDate.setDate(endDate.getDate() + 1);
+    const end  = endDate.toISOString().slice(0, 10).replace(/-/g, '');
+    const title = this.tx.field(event, 'title');
+    const desc  = (this.tx.field(event, 'description') ?? '').replace(/\n/g, '\\n');
+    const loc   = [event.location_name, event.location_address].filter(Boolean).join(', ');
+    const uid   = `${event.id}@vienna-free-events.netlify.app`;
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Vienna Free Events//EN',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`,
+      `DTSTART;VALUE=DATE:${start}`,
+      `DTEND;VALUE=DATE:${end}`,
+      `SUMMARY:${title}`,
+      desc ? `DESCRIPTION:${desc}` : '',
+      `LOCATION:${loc}`,
+      event.external_url ? `URL:${event.external_url}` : '',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].filter(Boolean).join('\r\n');
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: `${event.id}.ics` });
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      this.copied = true;
+      setTimeout(() => this.copied = false, 2000);
+    });
   }
 
   formatDate(dateStr: string): string {

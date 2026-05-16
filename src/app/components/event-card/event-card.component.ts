@@ -60,6 +60,16 @@ const CATEGORY_BAR: Record<string, string> = {
               🔁 {{ event.recurrence === 'daily' ? tx.t('badge_daily') : tx.t('badge_weekly') }}
             </span>
           }
+          @if (event.is_outdoor) {
+            <span class="badge bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
+              🌳 {{ tx.t('badge_outdoor') }}
+            </span>
+          }
+          @if (event.is_family_friendly) {
+            <span class="badge bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+              👨‍👩‍👧 {{ tx.t('badge_family') }}
+            </span>
+          }
           <!-- Heart button -->
           <button
             (click)="toggleFav($event)"

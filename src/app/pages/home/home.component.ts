@@ -5,19 +5,20 @@ import { EventService } from '../../services/event.service';
 import { TranslationService } from '../../services/translation.service';
 import { FavouritesService } from '../../services/favourites.service';
 import { PdfExportService } from '../../services/pdf-export.service';
+import { SeoService } from '../../services/seo.service';
 import { FilterBarComponent } from '../../components/filter-bar/filter-bar.component';
 import { EventCardComponent } from '../../components/event-card/event-card.component';
 import { EventTableComponent } from '../../components/event-table/event-table.component';
-import { MapViewComponent } from '../../components/map-view/map-view.component';
+import { CalendarViewComponent } from '../../components/calendar-view/calendar-view.component';
 import { Event, EventFilters } from '../../models/event.model';
 
-type ViewMode = 'grid' | 'table' | 'map';
+type ViewMode = 'grid' | 'table' | 'calendar';
 type TabMode  = 'all' | 'saved';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [FilterBarComponent, EventCardComponent, EventTableComponent, MapViewComponent, FormsModule],
+  imports: [FilterBarComponent, EventCardComponent, EventTableComponent, CalendarViewComponent, FormsModule],
   template: `
     <div class="min-h-screen bg-gray-50 dark:bg-gray-950">
       <!-- Hero -->
@@ -65,7 +66,7 @@ type TabMode  = 'all' | 'saved';
           </button>
         </div>
 
-        <!-- Filters (only shown in "all" tab) -->
+        <!-- Filters (only in "all" tab) -->
         @if (tab === 'all') {
           <app-filter-bar
             [categories]="categories"
@@ -82,8 +83,8 @@ type TabMode  = 'all' | 'saved';
               }
             </p>
             <div class="flex items-center gap-2 flex-wrap">
-              <!-- PDF export -->
-              @if (displayed.length > 0 && view !== 'map') {
+              <!-- PDF export (not useful in calendar view) -->
+              @if (displayed.length > 0 && view !== 'calendar') {
                 <button
                   (click)="exportPdf()"
                   [disabled]="exporting"
@@ -93,7 +94,7 @@ type TabMode  = 'all' | 'saved';
                 </button>
               }
 
-              <!-- Grid / Table / Map toggle -->
+              <!-- Grid / Table / Calendar toggle -->
               <div class="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <button
                   (click)="view = 'grid'"
@@ -120,16 +121,16 @@ type TabMode  = 'all' | 'saved';
                   {{ tx.t('view_table') }}
                 </button>
                 <button
-                  (click)="view = 'map'"
+                  (click)="view = 'calendar'"
                   class="px-3 py-1.5 text-sm flex items-center gap-1.5 transition-colors border-l border-gray-200 dark:border-gray-700"
-                  [class]="view === 'map'
+                  [class]="view === 'calendar'
                     ? 'bg-red-600 text-white'
                     : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
                 >
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
                   </svg>
-                  {{ tx.t('view_map') }}
+                  {{ tx.t('view_calendar') }}
                 </button>
               </div>
             </div>
@@ -144,7 +145,7 @@ type TabMode  = 'all' | 'saved';
           </div>
         }
 
-        <!-- No saved events message -->
+        <!-- No saved events -->
         @if (!loading && tab === 'saved' && displayed.length === 0) {
           <div class="text-center py-16 text-gray-400 dark:text-gray-600">
             <div class="text-4xl mb-3">♡</div>
@@ -174,9 +175,9 @@ type TabMode  = 'all' | 'saved';
           <app-event-table [events]="displayed" />
         }
 
-        <!-- Map view -->
-        @if (!loading && view === 'map') {
-          <app-map-view [events]="displayed" />
+        <!-- Calendar view -->
+        @if (!loading && view === 'calendar') {
+          <app-calendar-view [events]="displayed" />
         }
 
       </div>
@@ -199,9 +200,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     public fav: FavouritesService,
     private eventSvc: EventService,
     private pdfSvc: PdfExportService,
+    private seo: SeoService,
   ) {}
 
-  /** Events shown in the current tab */
   get displayed(): Event[] {
     if (this.tab === 'saved') {
       return this.events.filter(e => this.fav.has(e.id));
@@ -214,10 +215,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.subs.add(timer(4000).subscribe(() => {
       if (this.loading) this.showWakeUpBanner = true;
     }));
-    this.subs.add(this.tx.lang$.subscribe(() => {
+    this.subs.add(this.tx.lang$.subscribe(lang => {
+      this.seo.setHome(lang);
       this.loadEvents(this.currentFilters);
     }));
-    // Re-render when favourites change (so "Saved" tab stays live)
     this.subs.add(this.fav.ids$.subscribe(() => {}));
   }
 
@@ -235,7 +236,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.subs.add(
       this.eventSvc.getEvents(filters).subscribe({
         next: events => {
-          // Default sort: by date ascending
           this.events = [...events].sort((a, b) => a.start_date.localeCompare(b.start_date));
           this.loading = false;
           this.showWakeUpBanner = false;

@@ -21,6 +21,8 @@ export interface Event {
   image_url?: string;
   latitude?: number;
   longitude?: number;
+  is_outdoor?: boolean;
+  is_family_friendly?: boolean;
 }
 
 export interface EventFilters {
@@ -29,4 +31,6 @@ export interface EventFilters {
   to_date?: string;
   free_type?: string;
   search?: string;
+  is_outdoor?: boolean;
+  is_family_friendly?: boolean;
 }

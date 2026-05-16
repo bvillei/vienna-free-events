@@ -71,7 +71,7 @@ function weekStart(d: Date): Date {
       </div>
 
       <!-- Row 3: search, category, free type, dates, reset -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3">
 
         <!-- Search -->
         <div class="lg:col-span-2">
@@ -116,8 +116,26 @@ function weekStart(d: Date): Date {
           <input class="input" type="date" [(ngModel)]="filters.to_date" (ngModelChange)="onDateChange()" />
         </div>
 
+        <!-- Outdoor / Family toggles -->
+        <div class="flex gap-2">
+          <button
+            (click)="toggleFlag('outdoor')"
+            class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors flex-1 text-center"
+            [class]="filters.is_outdoor
+              ? 'bg-green-600 text-white border-green-600'
+              : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-green-400'"
+          >{{ tx.t('filter_outdoor') }}</button>
+          <button
+            (click)="toggleFlag('family')"
+            class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors flex-1 text-center"
+            [class]="filters.is_family_friendly
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-blue-400'"
+          >{{ tx.t('filter_family') }}</button>
+        </div>
+
         <!-- Reset -->
-        <div class="flex items-end lg:col-span-2">
+        <div class="flex items-end">
           <button class="btn-ghost w-full justify-center" (click)="reset()">
             {{ tx.t('filter_reset') }}
           </button>
@@ -207,6 +225,15 @@ export class FilterBarComponent implements OnInit {
 
   onDateChange() {
     this.active = null;
+    this.emit();
+  }
+
+  toggleFlag(flag: 'outdoor' | 'family') {
+    if (flag === 'outdoor') {
+      this.filters.is_outdoor = this.filters.is_outdoor ? undefined : true;
+    } else {
+      this.filters.is_family_friendly = this.filters.is_family_friendly ? undefined : true;
+    }
     this.emit();
   }
 

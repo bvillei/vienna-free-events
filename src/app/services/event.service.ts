@@ -17,7 +17,9 @@ export class EventService {
     if (filters.to_date)   params = params.set('to_date',   filters.to_date);
     if (filters.free_type && filters.free_type !== 'all')
                            params = params.set('free_type', filters.free_type);
-    if (filters.search)    params = params.set('search',    filters.search);
+    if (filters.search)             params = params.set('search',             filters.search);
+    if (filters.is_outdoor)         params = params.set('is_outdoor',         'true');
+    if (filters.is_family_friendly) params = params.set('is_family_friendly', 'true');
     return this.http.get<Event[]>(`${this.base}/events`, { params });
   }
 

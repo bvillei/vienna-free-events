@@ -1,0 +1,24 @@
+{
+  "name": "Vienna Free Events",
+  "short_name": "VFE",
+  "description": "Free events in Vienna — concerts, film, dance, theater, sport and more.",
+  "theme_color": "#dc2626",
+  "background_color": "#f9fafb",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
